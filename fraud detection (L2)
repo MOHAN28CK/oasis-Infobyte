@@ -1,0 +1,90 @@
+#fraud detection
+
+import pandas as pd
+import numpy as np
+from sklearn.ensemble import IsolationForest
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.neural_network import MLPClassifier
+from sklearn.metrics import classification_report, accuracy_score
+import matplotlib.pyplot as plt
+
+
+# Load the dataset
+data = pd.read_csv("D:\\creditcard.csv.zip")
+
+# Example columns: 'amount', 'transaction_time', 'merchant_category', 'is_fraud'
+# Create new features
+#data['transaction_hour'] = pd.to_datetime(data['transaction_time']).dt.hour
+
+# Define features for anomaly detection
+features = data[['Amount', 'Time', 'V3']]
+
+# Handle missing values if necessary
+features = features.dropna()
+
+# Initialize and fit the Isolation Forest model
+iso_forest = IsolationForest(contamination=0.01, random_state=42)
+iso_forest.fit(features)
+
+# Predict anomalies
+data['anomaly'] = iso_forest.predict(features)
+data['anomaly'] = data['anomaly'].apply(lambda x: 1 if x == -1 else 0)
+
+# Print the number of anomalies detected
+num_anomalies = data['anomaly'].sum()
+print(f'Number of anomalies detected: {num_anomalies}')
+
+#Optional: Plot the results (if 'amount' is one of the features)
+plt.figure(figsize=(10, 6))
+plt.scatter(data.index, data['Amount'], c=data['anomaly'], cmap='coolwarm')
+plt.title('Anomaly Detection in Transactions')
+plt.xlabel('Transaction Index')
+plt.ylabel('Transaction Amount')
+plt.show()
+
+# Assuming your dataset has a 'label' column indicating fraud (1) or not (0)
+# and other feature columns. Adjust the feature set as necessary.
+X = data.drop('Class', axis=1)  # Features
+y = data['Class']  # Labels
+
+
+# Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Standardize the features
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+# Initialize models
+log_reg = LogisticRegression(random_state=42)
+dec_tree = DecisionTreeClassifier(random_state=42)
+mlp = MLPClassifier(random_state=42)
+
+# Train models
+log_reg.fit(X_train, y_train)
+dec_tree.fit(X_train, y_train)
+mlp.fit(X_train, y_train)
+
+# Predict and evaluate models
+models = {'Logistic Regression': log_reg, 'Decision Tree': dec_tree, 'Neural Network': mlp}
+for name, model in models.items():
+    y_pred = model.predict(X_test)
+    print(f'--- {name} ---')
+    print(f'Accuracy: {accuracy_score(y_test, y_pred)}')
+    print(classification_report(y_test, y_pred))
+
+# Optional: Visualize feature importance for Decision Tree
+feature_importances = dec_tree.feature_importances_
+features = X.columns
+indices = np.argsort(feature_importances)[::-1]
+
+plt.figure(figsize=(10, 6))
+plt.title('Feature Importances')
+plt.bar(range(X.shape[1]), feature_importances[indices], align='center')
+plt.xticks(range(X.shape[1]), features[indices], rotation=90)
+plt.tight_layout()
+plt.show()
