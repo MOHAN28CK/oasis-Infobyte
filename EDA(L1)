@@ -1,0 +1,92 @@
+# Step 1: Import necessary libraries
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Step 2: Load the dataset
+df = pd.read_csv('/mnt/data/ifood_df.csv')
+
+# Step 3: Overview of the dataset
+print("Dataset Overview:")
+print("Shape of the dataset:", df.shape)  # Display number of rows and columns
+display(df.head())  # Display first 5 rows
+
+# Step 4: Summary statistics of the dataset
+print("\nSummary Statistics:")
+display(df.describe())  # Statistical summary of numerical columns
+
+# Step 5: Checking for missing values
+print("\nMissing Values:")
+print(df.isnull().sum())  # Count of missing values per column
+
+# Step 6: Data Types and Unique Values
+print("\nData Types and Unique Values:")
+for column in df.columns:
+    print(f"{column}: Type - {df[column].dtype}, Unique Values - {df[column].nunique()}")
+
+# Step 7: Univariate Analysis
+# Distribution of numeric features
+numeric_columns = df.select_dtypes(include=np.number).columns.tolist()
+
+plt.figure(figsize=(12, 8))
+for i, column in enumerate(numeric_columns, 1):
+    plt.subplot(3, 3, i)
+    sns.histplot(df[column], kde=True, bins=20)
+    plt.title(f"Distribution of {column}")
+plt.tight_layout()
+plt.show()
+
+# Step 8: Categorical Variables Analysis (if applicable)
+# Count plots for categorical features
+categorical_columns = df.select_dtypes(include='object').columns.tolist()
+
+plt.figure(figsize=(12, 6))
+for i, column in enumerate(categorical_columns, 1):
+    plt.subplot(2, 2, i)
+    sns.countplot(y=df[column], palette="viridis")
+    plt.title(f"Count of {column}")
+plt.tight_layout()
+plt.show()
+
+# Step 9: Bivariate Analysis
+# Scatter plots for relationships between numerical features
+plt.figure(figsize=(10, 6))
+sns.scatterplot(data=df, x='Purchase_Value', y='Purchase_Frequency', hue='Customer_Segment')
+plt.title("Purchase Value vs Purchase Frequency by Customer Segment")
+plt.show()
+
+# Step 10: Correlation Heatmap
+plt.figure(figsize=(10, 8))
+sns.heatmap(df.corr(), annot=True, cmap="coolwarm", fmt=".2f")
+plt.title("Correlation Heatmap of Numerical Features")
+plt.show()
+
+# Step 11: Outlier Detection
+plt.figure(figsize=(12, 8))
+for i, column in enumerate(numeric_columns, 1):
+    plt.subplot(3, 3, i)
+    sns.boxplot(data=df, x=column, palette="Set2")
+    plt.title(f"Boxplot of {column}")
+plt.tight_layout()
+plt.show()
+
+# Step 12: Analysis of Purchase Patterns
+# Distribution of purchase frequency and purchase value
+plt.figure(figsize=(14, 6))
+
+plt.subplot(1, 2, 1)
+sns.histplot(df['Purchase_Frequency'], kde=True, bins=20, color="purple")
+plt.title("Distribution of Purchase Frequency")
+
+plt.subplot(1, 2, 2)
+sns.histplot(df['Purchase_Value'], kde=True, bins=20, color="green")
+plt.title("Distribution of Purchase Value")
+
+plt.tight_layout()
+plt.show()
+
+# Step 13: Insights and Observations
+# This section is for manually noting down insights based on the visualizations
+print("Insights and Observations:")
+print("- Note down interesting patterns, outliers, correlations, or trends observed in the data.")
