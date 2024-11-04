@@ -1,0 +1,48 @@
+#PROJECT 3 DATA CLEANING
+
+
+import pandas as pd
+import numpy as np
+from scipy.stats import zscore
+
+# Load the dataset
+df = pd.read_csv("D:\\AB_NYC_2019.csv")
+print("Dataset loaded successfully.")
+
+# Step 1: Handling Missing Data
+# Method 1: Drop rows with missing values
+initial_row_count = df.shape[0]
+df.dropna(inplace=True)
+print(f"Missing data handled. Rows before: {initial_row_count}, Rows after: {df.shape[0]}")
+
+# Step 2: Removing Duplicates
+initial_row_count = df.shape[0]
+df.drop_duplicates(inplace=True)
+print(f"Duplicates removed. Rows before: {initial_row_count}, Rows after: {df.shape[0]}")
+
+# Step 3: Standardization
+# Standardizing column names to lowercase
+df.columns = df.columns.str.lower()
+print("Column names standardized to lowercase.")
+
+# Assuming 'price per unit' column needs to be converted to a standard unit (e.g., dollars)
+# Converting 'price per unit' column to float if not already and ensuring it's in dollars
+if 'price' in df.columns:
+    df['price'] = df['price'].replace(r'[\$,]', '', regex=True).astype(float)
+    print("Price column standardized to float and consistent currency format.")
+
+# Step 4: Outlier Detection
+# We will use the Z-score method to identify outliers in the 'price' column.
+if 'price' in df.columns:
+    price_per_unit_zscore = zscore(df['price'].values)
+    df['price_zscore'] = price_per_unit_zscore
+    # Define a threshold for outliers, e.g., |z| > 3
+    threshold = 3
+    initial_row_count = df.shape[0]
+    df = df[(df['price_zscore'].abs() <= threshold)]
+    print(f"Outliers removed from 'price' column. Rows before: {initial_row_count}, Rows after: {df.shape[0]}")
+    df.drop(columns=['price_zscore'], inplace=True)
+
+# Save the cleaned dataset to a new CSV file
+df.to_csv('cleaned_retail_sales.csv', index=False)
+print("Cleaned dataset saved to 'cleaned_retail_sales.csv'.")
