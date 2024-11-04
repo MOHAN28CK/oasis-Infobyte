@@ -1,0 +1,70 @@
+# Step 1: Import necessary libraries
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import silhouette_score
+
+# Step 2: Load the dataset
+df = pd.read_csv('/mnt/data/ifood_df.csv')
+
+# Step 3: Explore the dataset
+print("First 5 rows of the dataset:")
+display(df.head())  # Displaying first 5 rows
+
+print("\nSummary of the dataset:")
+display(df.describe())  # Statistical summary
+
+print("\nChecking for missing values:")
+display(df.isnull().sum())  # Checking for missing data
+
+# Step 4: Data Cleaning (if required, based on exploration)
+# Dropping columns with high missing values, if any (example shown, adjust based on actual data)
+df_cleaned = df.dropna()  # Handle missing values by dropping rows (or other techniques like filling)
+
+# Step 5: Feature selection and Scaling (Optional, choose relevant features for clustering)
+features = df_cleaned[['Purchase_Value', 'Purchase_Frequency']]  # Replace with relevant columns
+scaler = StandardScaler()
+scaled_features = scaler.fit_transform(features)
+
+# Step 6: Apply K-Means Clustering
+# Finding the optimal number of clusters using the elbow method
+inertia = []
+K = range(2, 11)  # Trying different cluster counts
+
+for k in K:
+    kmeans = KMeans(n_clusters=k, random_state=42)
+    kmeans.fit(scaled_features)
+    inertia.append(kmeans.inertia_)
+
+# Plot the elbow curve
+plt.figure(figsize=(8,5))
+plt.plot(K, inertia, 'bx-')
+plt.xlabel('Number of clusters (K)')
+plt.ylabel('Inertia')
+plt.title('Elbow Method for Optimal K')
+plt.show()
+
+# Step 7: Fit K-Means with optimal K (e.g., K = 3)
+kmeans = KMeans(n_clusters=3, random_state=42)
+df_cleaned['Cluster'] = kmeans.fit_predict(scaled_features)
+
+# Step 8: Visualizing the clusters
+plt.figure(figsize=(8,6))
+sns.scatterplot(x=features.iloc[:, 0], y=features.iloc[:, 1], hue=df_cleaned['Cluster'], palette="viridis")
+plt.title('Customer Segmentation')
+plt.xlabel('Purchase Value')
+plt.ylabel('Purchase Frequency')
+plt.show()
+
+# Step 9: Analyzing cluster characteristics
+print("Cluster Centroids:")
+print(kmeans.cluster_centers_)
+
+print("\nNumber of customers in each cluster:")
+print(df_cleaned['Cluster'].value_counts())
+
+# Step 10: Insights and Recommendations
+# Add your own analysis and recommendations based on the cluster distribution and behavior
